@@ -4,17 +4,27 @@
 using namespace std;
 
 int main() {
-	RBTree<int> mytree;
-	mytree.insert(1);
-	mytree.insert(11);
-	mytree.insert(17);
-	mytree.insert(13);
-	mytree.insert(25);
-	mytree.insert(27);
-	mytree.insert(6);
-	mytree.insert(8);
-	mytree.insert(15);
-	mytree.insert(22);
-	mytree.display();
+	RBTree<int, char> mytree, three;
+	for (int i = -5; i < 6; ++i) {
+		mytree.insert(i, 'p'+i);
+		cout << i << " was inserted" << endl;
+		mytree.display();
+	}
+	RBTree<int, char> two = mytree;
+	three = mytree;
+	for (int i = 5; i > -6; --i) {
+		mytree.remove(i);
+		cout << i << " was deleted" << endl;
+		mytree.display();
+	}
+	cout << "-----------------------" << endl;
+	two.display();
+	two.clear();
+	two.display();
+	cout << "-----------------------" << endl;
+	three.display();
+	cout << three[-4] << endl;
+	three.swap(three.at(-5), three.at(5));
+	three.display();
 	return 0;
 }

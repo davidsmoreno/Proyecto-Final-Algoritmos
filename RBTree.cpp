@@ -10,8 +10,8 @@ char toString(Color & color) {
 	return 'R';
 }
 
-template<typename datatype>
-typename RBTree<datatype>::RBTNode * RBTree<datatype>::min(RBTree<datatype>::RBTNode *root) const{
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::min(RBTree<keyType, dataType>::RBTNode *root) const{
 	RBTNode *temp = root;
 	if (temp != nullptr) {
 		while (temp->left != nullptr) {
@@ -21,8 +21,8 @@ typename RBTree<datatype>::RBTNode * RBTree<datatype>::min(RBTree<datatype>::RBT
 	return temp;
 }
 
-template<typename datatype>
-typename RBTree<datatype>::RBTNode * RBTree<datatype>::max(RBTree<datatype>::RBTNode *root) const{
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::max(RBTree<keyType, dataType>::RBTNode *root) const{
 	RBTNode *temp = root;
 	if (temp != nullptr) {
 		while (temp->right != nullptr) {
@@ -32,8 +32,8 @@ typename RBTree<datatype>::RBTNode * RBTree<datatype>::max(RBTree<datatype>::RBT
 	return temp;
 }
 
-template<typename datatype>
-typename RBTree<datatype>::RBTNode * RBTree<datatype>::successor(RBTree<datatype>::RBTNode *root) const {
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::successor(RBTree<keyType, dataType>::RBTNode *root) const {
 	RBTNode *temp = root;
 	if (temp == nullptr) {
 		return temp;
@@ -50,8 +50,8 @@ typename RBTree<datatype>::RBTNode * RBTree<datatype>::successor(RBTree<datatype
 	}
 }
 
-template<typename datatype>
-typename RBTree<datatype>::RBTNode * RBTree<datatype>::predecessor(RBTree<datatype>::RBTNode *root) const {
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::predecessor(RBTree<keyType, dataType>::RBTNode *root) const {
 	RBTNode *temp = root;
 	if (temp == nullptr) {
 		return temp;
@@ -68,323 +68,277 @@ typename RBTree<datatype>::RBTNode * RBTree<datatype>::predecessor(RBTree<dataty
 	}
 }
 
-template<typename datatype>
-void RBTree<datatype>::rotateLeft(RBTNode *node) {
-	RBTNode **aux = &root;
-	if (node->parent != nullptr && node->parent->right == node) {
-		aux = &(node->parent->right);
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::rotateLeft(RBTNode *node) {
+	
+	RBTNode *nParent = node->right;
+	if (node == root) {
+		root = nParent;
 	}
-	else if (node->parent != nullptr && node->parent->left == node) {
-		aux = &(node->parent->left);
+	moveDown(node, nParent);
+	node->right = nParent->left;
+	if (nParent->left != nullptr) {
+		nParent->left->parent = node;
 	}
-	*aux = node->right;
-	(*aux)->parent = node->parent;
-	node->parent = *aux;
-	node->right = (*aux)->left;
-	(*aux)->left = node;
-	if (node->right != nullptr) {
-		node->right->parent = node;
-	}
+	nParent->left = node;
 }
 
-template<typename datatype>
-void RBTree<datatype>::rotateRight(RBTNode *node) {
-	RBTNode **aux = &root;
-	if (node->parent != nullptr && node->parent->right == node) {
-		aux = &(node->parent->right);
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::rotateRight(RBTNode *node) {
+	RBTNode *nParent = node->left;
+	if (node == root) {
+		root = nParent;
 	}
-	else if (node->parent != nullptr && node->parent->left == node) {
-		aux = &(node->parent->left);
+	moveDown(node, nParent);
+	node->left = nParent->right;
+	if (nParent->right != nullptr) {
+		nParent->right->parent = node;
 	}
-	*aux = node->left;
-	(*aux)->parent = node->parent;
-	node->parent = *aux;
-	node->left = (*aux)->right;
-	(*aux)->right = node;
-	if (node->left != nullptr) {
-		node->left->parent = node;
-	}
+	nParent->right = node;
 }
 
-template<typename datatype>
-void RBTree<datatype>::fixViolation(RBTNode *root, RBTNode *node) {
-	RBTNode *parent = nullptr, *grandparent = nullptr;
-	while ((node != root) && (node->color != Color::BLACK) && (node->parent->color == Color::RED)) {
-		parent = node->parent;
-		grandparent = node->parent->parent;
-		if (parent == grandparent->left) {
-			RBTNode *uncle = grandparent->right;
-			if (uncle != nullptr && uncle->color == Color::RED) {
-				grandparent->color = Color::RED;
-				parent->color = Color::BLACK;
-				uncle->color = Color::BLACK;
-				node = grandparent;
-			}
-			else {
-				if (node == parent->right) {
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::fixRedRed(RBTNode *node) {
+	if (node == root) {
+		node->color = Color::BLACK;
+		return;
+	}
+	RBTNode *parent = node->parent, *grandparent = parent->parent, *uncle = Uncle(node);
+	if (parent->color != Color::BLACK) {
+		if (uncle != nullptr && uncle->color ==Color::RED) {
+			parent->color = Color::BLACK;
+			uncle->color = Color::BLACK;
+			grandparent->color = Color::RED;
+			fixRedRed(grandparent);
+		}
+		else {
+			if (parent == parent->parent->left) {
+				if (node == node->parent->left) {
+					Color tmp = parent->color;
+					parent->color = grandparent->color;
+					grandparent->color = tmp;
+				}
+				else {
 					rotateLeft(parent);
-					node = parent;
-					parent = node->parent;
+					Color tmp = node->color;
+					node->color = grandparent->color;
+					grandparent->color = tmp;
 				}
 				rotateRight(grandparent);
-				Color temp = parent->color;
-				parent->color = grandparent->color;
-				grandparent->color = temp;
-				node = parent;
-			}
-		}
-		else {
-			RBTNode *uncle = grandparent->left;
-			if ((uncle != nullptr) && (uncle->color == Color::RED)) {
-				grandparent->color = Color::RED;
-				parent->color = Color::BLACK;
-				uncle->color = Color::BLACK;
-				node = grandparent;
 			}
 			else {
-				if (node == parent->left) {
+				if (node == node->parent->left) {
 					rotateRight(parent);
-					node = parent;
-					parent =node->parent;
+					Color tmp = node->color;
+					node->color = grandparent->color;
+					grandparent->color = tmp;
+				}
+				else {
+					Color tmp = parent->color;
+					parent->color = grandparent->color;
+					grandparent->color = tmp;
 				}
 				rotateLeft(grandparent);
-				Color temp = parent->color;
-				parent->color = grandparent->color;
-				grandparent->color = temp;
-				node = parent;
 			}
 		}
 	}
-	root->color =  Color::BLACK;
 }
 
-/*template<typename datatype>
-typename RBTree<datatype>::RBTNode * RBTree<datatype>::sibling(RBTree<datatype>::RBTNode *node) {
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::moveDown(RBTree<keyType, dataType>::RBTNode *node, RBTree<keyType, dataType>::RBTNode *nParent) {
 	if (node->parent != nullptr) {
-		if (node == node->parent->left) {
-			return node->parent->right;
-		}
-		return node->parent->left;
-	}
-	return nullptr;
-}
-
-template<typename datatype>
-bool RBTree<datatype>::isBlack(RBTree<datatype>::RBTNode *node) {
-	if (node == nullptr) {
-		return true;
-	}
-	else {
-		return node->color == Color::BLACK;
-	}
-}
-
-template<typename datatype>
-void RBTree<datatype>::remove_case1(RBTree<datatype>::RBTNode *node) {
-	if (node->parent != nullptr) {
-		remove_case2(node);
-	}
-}
-
-template<typename datatype>
-void RBTree<datatype>::remove_case2(RBTree<datatype>::RBTNode *node) {
-	RBTNode *sbl = sibling(node);
-	if (!isBlack(sbl)) {
-		node->parent->color = Color::RED;
-		sbl->color = Color::BLACK;
-		if (node == node->parent->left) {
-			rotateLeft(node->parent);
+		if (node->parent->left == node) {
+			node->parent->left = nParent;
 		}
 		else {
-			rotateRight(node->parent);
+			node->parent->right = nParent;
 		}
 	}
-	remove_case3(node);
+	nParent->parent = node->parent;
+	node->parent = nParent;
 }
 
-template<typename datatype>
-void RBTree<datatype>::remove_case3(RBTree<datatype>::RBTNode *node) {
-	RBTNode *sbl = sibling(node);
-	if (isBlack(node->parent) && isBlack(sbl) && isBlack(sbl->left) && isBlack(sbl->right)) {
-		sbl->color = Color::RED;
-		remove_case1(node->parent);
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::Uncle(RBTree<keyType, dataType>::RBTNode *node) {
+	if (node->parent == nullptr || node->parent->parent == nullptr) {
+		return nullptr;
+	}
+	if (node->parent->parent->left == node->parent) {
+		return node->parent->parent->right;
 	}
 	else {
-		remove_case4(node);
+		return node->parent->parent->left;
 	}
 }
 
-template<typename datatype>
-void RBTree<datatype>::remove_case4(RBTree<datatype>::RBTNode *node) {
-	RBTNode *sbl = sibling(node);
-	if (!isBlack(node->parent) && isBlack(sbl) && isBlack(sbl->left) && isBlack(sbl->right)) {
-		sbl->color = Color::RED;
-		node->parent->color = Color::BLACK;
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::sibling(RBTree<keyType, dataType>::RBTNode *node) {
+	if (node->parent == nullptr) {
+		return nullptr;
 	}
-	else {
-		remove_case5(node);
-	}
-}
-
-template<typename datatype>
-void RBTree<datatype>::remove_case5(RBTree<datatype>::RBTNode *node) {
-	RBTNode *sbl = sibling(node);
-	if (node == node->parent->left && isBlack(sbl) && !isBlack(sbl->left) && isBlack(sbl->right)) {
-		sbl->color = Color::RED;
-		if (!isBlack(sbl->left)) {
-			sbl->left->color = Color::BLACK;
-		}
-		rotateRight(sbl);
-	}
-	else if (node == node->parent->right && isBlack(sbl) && !isBlack(sbl->left) && isBlack(sbl->right)) {
-		sbl->color = Color::RED;
-		if (!isBlack(sbl->right)) {
-			sbl->right->color = Color::BLACK;
-		}
-		rotateLeft(sbl);
-	}
-	remove_case6(node);
-}
-
-template<typename datatype>
-void RBTree<datatype>::remove_case6(RBTree<datatype>::RBTNode *node) {
-	RBTNode *sbl = sibling(node);
-	sbl->color = node->parent->color;
-	node->parent->color = Color::BLACK;
-	if (node == node->parent->left) {
-		sbl->right->color = Color::BLACK;
-		rotateLeft(node->parent);
-	}
-	else {
-		sbl->left->color = Color::BLACK;
-		rotateRight(node->parent);
-	}
-}
-
-template<typename datatype>
-void RBTree<datatype>::remove_child(RBTree<datatype>::RBTNode *node) {
-	RBTNode *child = (node->right == nullptr) ? node->left : node->right;
-	child->parent = node->parent;
 	if (node->parent->left == node) {
-		node->parent->left = child;
+		return node->parent->right;
+	}
+	return node->parent->left;
+}
+
+template<typename keyType, typename dataType>
+bool RBTree<keyType, dataType>::hasRedChild(RBTree<keyType, dataType>::RBTNode *node) {
+	return (node->left != nullptr && node->left->color == Color::RED) || (node->right != nullptr && node->right->color == Color::RED);
+}
+
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::BSTreplace(RBTree<keyType, dataType>::RBTNode *node) {
+	if (node->left != nullptr && node->right != nullptr) {
+		return successor(node);
+	}
+	if (node->left == nullptr && node->right == nullptr) {
+		return nullptr;
+	}
+	if (node->left != nullptr) {
+		return node->left;
 	}
 	else {
-		node->parent->right = child;
-	}
-	if (node->color == Color::BLACK) {
-		if (child->color == Color::RED) {
-			child->color = Color::BLACK;
-		}
-		else {
-			remove_case1(child);
-		}
-	}
-	delete node;
-}
-
-template<typename datatype>
-void RBTree<datatype>::BSTremove(RBTree<datatype>::RBTNode *temp) {
-	RBTNode *other = temp;
-	datatype key = temp->key;
-	if (temp != nullptr) {
-		if (temp->left == nullptr && temp->right == nullptr) {
-			temp = temp->parent;
-			if (temp != nullptr) {
-				if (temp->left == other) {
-					temp->left = nullptr;
-				}
-				else if (temp->right == other) {
-					temp->right = nullptr;
-				}
-			}
-			else {
-				this->root = nullptr;
-			}
-			delete other;
-		}
-		else if (temp->left == nullptr && temp->right != nullptr) {
-			temp = temp->parent;
-			if (temp != nullptr) {
-				if (key < temp->key) {
-					temp->left = other->right;
-				}
-				else if (key > temp->key) {
-					temp->right = other->right;
-				}
-			}
-			else {
-				this->root = other->right;
-				this->root->parent = nullptr;
-			}
-			delete other;
-		}
-		else if (temp->left != nullptr && temp->right == nullptr) {
-			temp = temp->parent;
-			if (temp != nullptr) {
-				if (key < temp->key) {
-					temp->left = other->left;
-				}
-				else if (key > temp->key) {
-					temp->right = other->left;
-				}
-			}
-			else {
-				this->root = other->left;
-				this->root->parent = nullptr;
-			}
-			delete other;
-		}
-		else {
-			RBTNode *other2 = predecessor(other);
-			other->key = other2->key;
-			remove(other2);
-		}
+		return node->right;
 	}
 }
 
-template<typename datatype>
-void RBTree<datatype>::remove(RBTree<datatype>::RBTNode *node) {
-	if (node != nullptr) {
-		if (node->left != nullptr && node->right != nullptr) {
-			RBTNode *temp = predecessor(node);
-			node->key = temp->key;
-			remove(temp);
-		}
-		else if ((node->left == nullptr && node->right != nullptr) || (node->left != nullptr && node->right == nullptr)) {
-			if (node->color == Color::BLACK) {
-				remove_child(node);
-			}
-			else {
-				BSTremove(node);
-			}
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::remove(RBTree<keyType, dataType>::RBTNode *v) {
+	RBTNode *u = BSTreplace(v);
+	bool uvBlack = ((u == nullptr || u->color == Color::BLACK) && (v->color == Color::BLACK));
+	RBTNode *parent = v->parent;
+	if (u == nullptr) {
+		if (v == root) {
+			root = nullptr;
 		}
 		else {
-			if (node->color == Color::RED) {
-				BSTremove(node);
+			if (uvBlack) {
+				fixDoubleBlack(v);
 			}
 			else {
-				remove_child(node);
+				if (sibling(v) != nullptr) {
+					sibling(v)->color = Color::RED;
+				}
+			}
+			if (v->parent->left == v) {
+				parent->left = nullptr;
+			}
+			else {
+				parent->right = nullptr;
+			}
+		}
+		delete v;
+		return;
+	}
+	if (v->left == nullptr || v->right == nullptr) {
+		if (v == root) {
+			v->pr.first = u->pr.first;
+			v->left = v->right = nullptr;
+			delete u;
+		}
+		else {
+			if (v->parent->left == v) {
+				parent->left = u;
+			}
+			else {
+				parent->right = u;
+			}
+			delete v;
+			u->parent = parent;
+			if (uvBlack) {
+				fixDoubleBlack(u);
+			}
+			else {
+				u->color = Color::BLACK;
+			}
+		}
+		return;
+	}
+	keyType tmp = u->pr.first;
+	u->pr.first = v->pr.first;
+	v->pr.first = tmp;
+	remove(u);
+}
+
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::fixDoubleBlack(RBTree<keyType, dataType>::RBTNode *node) {
+	if (node == root) {
+		return;
+	}
+	RBTNode *sbl = sibling(node), *parent = node->parent;
+	if (sbl == nullptr) {
+		fixDoubleBlack(parent);
+	}
+	else {
+		if (sbl->color == Color::RED) {
+			parent->color = Color::RED;
+			sbl->color = Color::BLACK;
+			if (sbl->parent->left == sbl) {
+				rotateRight(parent);
+			}
+			else {
+				rotateLeft(parent);
+			}
+			fixDoubleBlack(node);
+		}
+		else {
+			if (hasRedChild(sbl)) {
+				if (sbl->left != nullptr && sbl->left->color == Color::RED) {
+					if (sbl->parent->left == sbl) {
+						sbl->left->color = sbl->color;
+						sbl->color = parent->color;
+						rotateRight(parent);
+					}
+					else {
+						sbl->left->color = parent->color;
+						rotateRight(sbl);
+						rotateLeft(parent);
+					}
+				}
+				else {
+					if (sbl->parent->left == sbl) {
+						sbl->right->color = parent->color;
+						rotateLeft(sbl);
+						rotateRight(parent);
+					}
+					else {
+						sbl->right->color = sbl->color;
+						sbl->color = parent->color;
+						rotateLeft(parent);
+					}
+				}
+				parent->color = Color::BLACK;
+			}
+			else {
+				sbl->color = Color::RED;
+				if (parent->color == Color::BLACK) {
+					fixDoubleBlack(parent);
+				}
+				else {
+					parent->color = Color::BLACK;
+				}
 			}
 		}
 	}
-}*/
+}
 
-template<typename datatype>
-typename RBTree<datatype>::RBTNode * RBTree<datatype>::copy(RBTree<datatype>::RBTNode * root, RBTree<datatype>::RBTNode *parent) {
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::copy(RBTree<keyType, dataType>::RBTNode *root, RBTree<keyType, dataType>::RBTNode *parent) {
 	RBTNode *out = nullptr;
 	if (root != nullptr) {
 		out = new RBTNode;
 		out->parent = parent;
-		out->key = root->key;
+		out->pr = root->pr;
+		out->color = root->color;
 		out->left = copy(root->left, out);
 		out->right = copy(root->right, out);
-		out->color = root->color;
 	}
 	return out;
 }
 
-template<typename datatype>
-void RBTree<datatype>::clear(RBTree<datatype>::RBTNode *root) {
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::clear(RBTree<keyType, dataType>::RBTNode *root) {
 	if (root != nullptr) {
 		RBTNode *left = root->left, *right = root->right;
 		delete root;
@@ -393,122 +347,170 @@ void RBTree<datatype>::clear(RBTree<datatype>::RBTNode *root) {
 	}
 }
 
-template<typename datatype>
-void RBTree<datatype>::display(RBTNode *root, std::ostream & out, RBTNode *max) const {
-	datatype mx = max->key;
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::display(RBTNode *root, std::ostream & out, keyType max) const{
 	if (root != nullptr) {
-		if (root->key != mx) {
+		if (root->pr.first < max) {
 			display(root->left, out, max);
-			out << toString(root->color) << "_" << root->key << ", ";
+			out << toString(root->color) << "{" << root->pr.first << ", " << root->pr.second << "}, ";
 			display(root->right, out, max);
 		}
 		else {
-			out << toString(root->color) << "_" << root->key;
+			display(root->left, out, max);
+			out << toString(root->color) << "{" << root->pr.first << ", " << root->pr.second << "}";
 		}
 	}
 }
 
-template<typename datatype>
-typename RBTree<datatype>::RBTNode * RBTree<datatype>::insert(RBTree<datatype>::RBTNode * &root, datatype key, RBTree<datatype>::RBTNode *parent) {
-	if (root == nullptr) {
-		root = new RBTNode;
-		root->key = key;
-		root->parent = parent;
-		root->left = nullptr;
-		root->right = nullptr;
-		root->color = Color::RED;
-		return root;
-	}
-	else {
-		if (key < root->key) {
-			return insert(root->left, key, root);
+template<typename keyType, typename dataType>
+typename RBTree<keyType, dataType>::RBTNode * RBTree<keyType, dataType>::Find(keyType key) const{
+	RBTNode *temp = root;
+	while (temp != nullptr) {
+		if (key < temp->pr.first) {
+			if (temp->left == nullptr) {
+				break;
+			}
+			else {
+				temp = temp->left;
+			}
 		}
-		else if (key > root->key) {
-			return insert(root->right, key, root);
-		}
-		return nullptr;
-	}
-}
-
-template<typename datatype>
-typename RBTree<datatype>::RBTNode * RBTree<datatype>::Find(RBTree<datatype>::RBTNode *root, datatype key) const{
-	if (root == nullptr) {
-		return nullptr;
-	}
-	else {
-		if (key == root->key) {
-			return root;
-		}
-		else if (key < root->key) {
-			return Find(root->left, key);
+		else if (key == temp->pr.first) {
+			break;
 		}
 		else {
-			return Find(root->right, key);
+			if (temp->right == nullptr) {
+				break;
+			}
+			else {
+				temp =  temp->right;
+			}
 		}
 	}
+	return temp;
 }
 
-template<typename datatype>
-RBTree<datatype>::RBTree() {
+template<typename keyType, typename dataType>
+RBTree<keyType, dataType>::RBTree() {
 	root = nullptr;
 	count = 0;
 }
 
-template<typename datatype>
-RBTree<datatype>::RBTree(const RBTree & rhs) {
+template<typename keyType, typename dataType>
+RBTree<keyType, dataType>::RBTree(const RBTree & rhs) {
 	this->root = copy(rhs.root, nullptr);
 	count = rhs.count;
 }
 
-template<typename datatype>
-RBTree<datatype>::~RBTree() {
+template<typename keyType, typename dataType>
+RBTree<keyType, dataType>::~RBTree() {
 	clear();
 }
 
-template<typename datatype>
-void RBTree<datatype>::remove(datatype key) {
-	if (find(key)) {
-		remove(Find(root, key));
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::remove(keyType key) {
+	if (root == nullptr) {
+		return;
 	}
+	RBTNode *v = Find(key);
+	if (v->pr.first != key) {
+		std::cout << key << " isnt in the tree" << std::endl;
+		return;
+	}
+	remove(v);
+	count--;
 }
 
-template<typename datatype>
-bool RBTree<datatype>::empty(void) const {
+template<typename keyType, typename dataType>
+bool RBTree<keyType, dataType>::empty(void) const {
 	return count == 0;
 }
 
-template<typename datatype>
-void RBTree<datatype>::clear(void) {
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::clear(void) {
 	clear(root);
 	root = nullptr;
 	count = 0;
 }
 
-template<typename datatype>
-size_t RBTree<datatype>::size(void) const {
+template<typename keyType, typename dataType>
+size_t RBTree<keyType, dataType>::size(void) const {
 	return count;
 }
-template<typename datatype>
-bool RBTree<datatype>::find(datatype key) const {
-	if (Find(root, key) == nullptr) {
-		return false;
+template<typename keyType, typename dataType>
+bool RBTree<keyType, dataType>::find(keyType key) const {
+	RBTNode *tmp = Find(key);
+	if (tmp != nullptr && tmp->pr.first == key) {
+		return true;
 	}
-	return true;
+	return false;
 }
 
-template<typename datatype>
-void RBTree<datatype>::insert(datatype key) {
-	if (!find(key)) {
-		fixViolation(root, insert(root, key, nullptr));
-		count++;
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::insert(keyType key, dataType data) {
+	RBTNode *newNode = new RBTNode;
+	newNode->pr = {key, data};
+	newNode->left = nullptr;
+	newNode->right = nullptr;
+	newNode->parent = nullptr;
+	newNode->color = Color::RED;
+	if (root == nullptr) {
+		newNode->color = Color::BLACK;
+		root  = newNode;
 	}
+	else {
+		RBTNode *temp = Find(key);
+		if (temp->pr.first == key) {
+			return;
+		}
+		newNode->parent = temp;
+		if (key < temp->pr.first) {
+			temp->left = newNode;
+		}
+		else {
+			temp->right = newNode;
+		}
+		fixRedRed(newNode);
+	}
+	count++;
 }
 
-template<typename datatype>
-void RBTree<datatype>::display(std::ostream &out) const {
-	out << "[";
-	display(root, out, max(root));
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::display(std::ostream &out) const {
+	RBTNode *mx = max(root);
+	out << '[';
+	if (mx != nullptr) {
+		display(root, out, mx->pr.first);
+	}
 	out << "]\n";
+}
+
+template<typename keyType, typename dataType>
+RBTree<keyType, dataType> & RBTree<keyType, dataType>::operator=(const RBTree<keyType, dataType> & rhs) {
+	this->clear();
+	this->root = copy(rhs.root, nullptr);
+	this->count = rhs.count;
+	return *this;
+}
+
+template<typename keyType, typename dataType>
+dataType & RBTree<keyType, dataType>::operator[](keyType key) {
+	return at(key);
+}
+
+template<typename keyType, typename dataType>
+dataType & RBTree<keyType, dataType>::at(keyType key) {
+	RBTNode *temp = Find(key);
+	if (temp != nullptr && temp->pr.first == key) {
+		return temp->pr.second;
+	}
+	throw;
+}
+
+template<typename keyType, typename dataType>
+void RBTree<keyType, dataType>::swap(dataType & dt1, dataType & dt2) {
+	dataType tmp = dt1;
+	dt1 = dt2;
+	dt2 = tmp;
 }
 
 #endif //_RBTree_cpp_
