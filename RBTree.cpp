@@ -1,6 +1,6 @@
 #ifndef _RBTree_cpp_
 #define _RBTree_cpp_
-#include <string>
+
 #include "RBTree.hpp"
 
 char toChar(Color & color) {
@@ -345,7 +345,6 @@ void RBTree<keyType, dataType>::clear(RBTree<keyType, dataType>::RBTNode *root) 
 		clear(left);
 		clear(right);
 	}
-	count = 0;
 }
 
 template<typename keyType, typename dataType>
