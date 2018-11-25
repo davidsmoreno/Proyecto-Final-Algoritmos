@@ -233,7 +233,7 @@ void RBTree<keyType, dataType>::remove(RBTree<keyType, dataType>::RBTNode *v) {
 	}
 	if (v->left == nullptr || v->right == nullptr) {
 		if (v == root) {
-			v->pr.first = u->pr.first;
+			v->pr = u->pr;
 			v->left = v->right = nullptr;
 			delete u;
 		}
@@ -255,9 +255,9 @@ void RBTree<keyType, dataType>::remove(RBTree<keyType, dataType>::RBTNode *v) {
 		}
 		return;
 	}
-	keyType tmp = u->pr.first;
-	u->pr.first = v->pr.first;
-	v->pr.first = tmp;
+	auto tmp = u->pr;
+	u->pr = v->pr;
+	v->pr = tmp;
 	remove(u);
 }
 
@@ -345,6 +345,7 @@ void RBTree<keyType, dataType>::clear(RBTree<keyType, dataType>::RBTNode *root) 
 		clear(left);
 		clear(right);
 	}
+	count = 0;
 }
 
 template<typename keyType, typename dataType>
@@ -407,17 +408,17 @@ RBTree<keyType, dataType>::~RBTree() {
 }
 
 template<typename keyType, typename dataType>
-void RBTree<keyType, dataType>::remove(keyType key) {
+bool RBTree<keyType, dataType>::remove(keyType key) {
 	if (root == nullptr) {
-		return;
+		return false;
 	}
 	RBTNode *v = Find(key);
 	if (v->pr.first != key) {
-		std::cout << key << " isnt in the tree" << std::endl;
-		return;
+		return false;
 	}
 	remove(v);
 	count--;
+	return true;
 }
 
 template<typename keyType, typename dataType>
@@ -446,7 +447,7 @@ bool RBTree<keyType, dataType>::find(keyType key) const {
 }
 
 template<typename keyType, typename dataType>
-void RBTree<keyType, dataType>::insert(keyType key, dataType data) {
+bool RBTree<keyType, dataType>::insert(keyType key, dataType data) {
 	RBTNode *newNode = new RBTNode;
 	newNode->pr = {key, data};
 	newNode->left = nullptr;
@@ -460,7 +461,7 @@ void RBTree<keyType, dataType>::insert(keyType key, dataType data) {
 	else {
 		RBTNode *temp = Find(key);
 		if (temp->pr.first == key) {
-			return;
+			return false;
 		}
 		newNode->parent = temp;
 		if (key < temp->pr.first) {
@@ -472,6 +473,7 @@ void RBTree<keyType, dataType>::insert(keyType key, dataType data) {
 		fixRedRed(newNode);
 	}
 	count++;
+	return true;
 }
 
 template<typename keyType, typename dataType>
