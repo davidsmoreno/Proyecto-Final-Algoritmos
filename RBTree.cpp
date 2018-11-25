@@ -345,6 +345,7 @@ void RBTree<keyType, dataType>::clear(RBTree<keyType, dataType>::RBTNode *root) 
 		clear(left);
 		clear(right);
 	}
+	count = 0;
 }
 
 template<typename keyType, typename dataType>
@@ -481,7 +482,7 @@ void RBTree<keyType, dataType>::display(std::ostream &out) const {
 	if (mx != nullptr) {
 		display(root, out, mx->pr.first);
 	}
-	out << "]\n";
+	out << "] size: " << count << "\n";
 }
 
 template<typename keyType, typename dataType>
@@ -503,7 +504,7 @@ dataType & RBTree<keyType, dataType>::at(keyType key) {
 	if (temp != nullptr && temp->pr.first == key) {
 		return temp->pr.second;
 	}
-	throw;
+	throw std::underflow_error("Function at(key) invoked when key wasnt in the tree");
 }
 
 template<typename keyType, typename dataType>
