@@ -1,6 +1,6 @@
 #ifndef _RBTree_cpp_
 #define _RBTree_cpp_
-
+#include <string>
 #include "RBTree.hpp"
 
 char toChar(Color & color) {
