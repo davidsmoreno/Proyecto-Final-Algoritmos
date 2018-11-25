@@ -3,7 +3,7 @@
 
 #include "RBTree.hpp"
 
-char toString(Color & color) {
+char toChar(Color & color) {
 	if (color == BLACK) {
 		return 'B';
 	}
@@ -353,12 +353,12 @@ void RBTree<keyType, dataType>::display(RBTNode *root, std::ostream & out, keyTy
 	if (root != nullptr) {
 		if (root->pr.first < max) {
 			display(root->left, out, max);
-			out << toString(root->color) << "{" << root->pr.first << ", " << root->pr.second << "}, ";
+			out << toChar(root->color) << "{" << root->pr.first << ", " << root->pr.second << "}, ";
 			display(root->right, out, max);
 		}
 		else {
 			display(root->left, out, max);
-			out << toString(root->color) << "{" << root->pr.first << ", " << root->pr.second << "}";
+			out << toChar(root->color) << "{" << root->pr.first << ", " << root->pr.second << "}";
 		}
 	}
 }
